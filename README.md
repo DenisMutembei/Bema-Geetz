@@ -2,6 +2,8 @@
 
 > *Redefining Excellence* — A full-stack marketplace platform for car hire and accommodation rentals in Nairobi & Nakuru, Kenya.
 
+**GitHub Repository:** [DenisMutembei/Bema-Geetz](https://github.com/DenisMutembei/Bema-Geetz)
+
 ![Bema Geetz](https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=60)
 
 ---

@@ -2,6 +2,7 @@
   "name": "bema-geetz",
   "version": "1.0.0",
   "description": "Bema Geetz - Premium Car Hire & Accommodations Platform",
+  "repository": "https://github.com/DenisMutembei/Bema-Geetz",
   "scripts": {
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
     "dev:backend": "cd backend && npm run dev",

@@ -2,6 +2,7 @@
   "name": "bema-geetz-backend",
   "version": "1.0.0",
   "description": "Bema Geetz Backend API",
+  "repository": "https://github.com/DenisMutembei/Bema-Geetz",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

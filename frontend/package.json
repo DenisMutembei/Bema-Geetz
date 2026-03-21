@@ -1,6 +1,7 @@
 {
   "name": "bema-geetz-frontend",
   "version": "1.0.0",
+  "repository": "https://github.com/DenisMutembei/Bema-Geetz",
   "type": "module",
   "scripts": {
     "dev": "vite",

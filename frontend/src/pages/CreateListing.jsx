@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import MediaUpload from '../components/MediaUpload';
 
 export default function CreateListing() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     title: '', type: 'car', price: '', location: '',
     description: '', images: [],
@@ -20,14 +22,26 @@ export default function CreateListing() {
     setLoading(true);
     setError('');
     try {
-      const payload = { ...form, price: parseFloat(form.price) };
-      if (form.year) payload.year = parseInt(form.year);
-      if (form.bedrooms) payload.bedrooms = parseInt(form.bedrooms);
-      if (form.bathrooms) payload.bathrooms = parseInt(form.bathrooms);
+      const payload = {
+        ...form,
+        price: Number(form.price) || 0,
+        year: form.year ? parseInt(form.year, 10) : null,
+        bedrooms: form.bedrooms ? parseInt(form.bedrooms, 10) : null,
+        bathrooms: form.bathrooms ? parseInt(form.bathrooms, 10) : null,
+      };
+
+      // Remove unset integer fields so backend inserts NULL
+      ['year', 'bedrooms', 'bathrooms'].forEach(field => {
+        if (payload[field] == null) delete payload[field];
+      });
+
       await api.post('/listings', payload);
-      navigate('/host');
+      if (user?.role === 'admin') navigate('/admin');
+      else navigate('/host');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create listing');
+      console.error('Create listing error:', err);
+      const apiError = err.response?.data?.error || err.response?.statusText || err.message;
+      setError(apiError || 'Failed to create listing');
     } finally {
       setLoading(false);
     }

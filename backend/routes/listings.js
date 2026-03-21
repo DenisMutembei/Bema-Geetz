@@ -41,8 +41,15 @@ router.get('/:id', async (req, res) => {
 // Create listing
 router.post('/', hostMiddleware, async (req, res) => {
   try {
-    const { title, type, price, location, images, description, make, model, year, bedrooms, bathrooms } = req.body;
+    const { title, type, price, location, images, description, make, model } = req.body;
+    let { year, bedrooms, bathrooms } = req.body;
+
     if (!title || !type || !price || !location) return res.status(400).json({ error: 'Required fields missing' });
+
+    year = year ? parseInt(year, 10) : null;
+    bedrooms = bedrooms ? parseInt(bedrooms, 10) : null;
+    bathrooms = bathrooms ? parseInt(bathrooms, 10) : null;
+
     const result = await pool.query(
       `INSERT INTO listings (title, type, price, location, images, description, host_id, make, model, year, bedrooms, bathrooms)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
