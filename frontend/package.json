@@ -9,9 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.98.0",
     "axios": "^1.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.6.0",
+    "react-intersection-observer": "^10.0.3",
+    "react-lazy-load-image-component": "^1.6.3",
     "react-router-dom": "^6.16.0"
   },
   "devDependencies": {

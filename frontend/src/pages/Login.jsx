@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -9,6 +9,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,7 +18,9 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', form);
       login(res.data.token, res.data.user);
-      if (res.data.user.role === 'admin') navigate('/admin');
+      const next = searchParams.get('next');
+      if (next) navigate(next);
+      else if (res.data.user.role === 'admin') navigate('/admin');
       else if (res.data.user.role === 'host') navigate('/host');
       else navigate('/');
     } catch (err) {
@@ -47,7 +50,7 @@ export default function Login() {
             </svg>
           </div>
           <h1 className="font-display text-3xl text-white font-bold">Welcome Back</h1>
-          <p className="text-gray-500 text-sm mt-1">Sign in to your Bema Geetz account</p>
+          <p className="text-gray-500 text-sm mt-1">Sign in to continue with your rental or manage your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-dark-card border border-dark-border rounded-2xl p-8 space-y-5">
@@ -80,11 +83,10 @@ export default function Login() {
           </div>
         </form>
 
-        {/* Demo credentials */}
-        <div className="mt-4 bg-dark-card border border-dark-border rounded-xl p-4 text-xs text-gray-500">
-          <div className="text-gray-400 font-semibold mb-2">Demo Admin:</div>
-          <div>Email: admin@bemageetz.com</div>
-          <div>Password: admin123</div>
+        <div className="mt-4 bg-dark-card border border-dark-border rounded-xl p-4 text-xs text-gray-500 space-y-2">
+          <div className="text-gray-300 font-semibold">Login guide</div>
+          <div>Customers: register with the `Browse & Book` option, then sign in with your email and password.</div>
+          <div>Hosts: register with the `List & Earn` option, then sign in to manage listings.</div>
         </div>
       </div>
     </div>

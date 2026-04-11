@@ -24,27 +24,27 @@ export default function SearchBar({ onSearch, initialValues = {} }) {
     <form onSubmit={handleSearch} className="bg-dark-card border border-dark-border rounded-2xl p-2 flex flex-col sm:flex-row gap-2 shadow-2xl">
       <select
         value={type}
-        onChange={e => setType(e.target.value)}
+        onChange={(e) => setType(e.target.value)}
         className="input-dark flex-1 px-4 py-3 rounded-xl text-sm"
       >
         <option value="">All Types</option>
-        <option value="car">🚗 Car Hire</option>
-        <option value="house">🏠 Accommodation</option>
+        <option value="car">Car Hire</option>
+        <option value="house">Accommodation</option>
       </select>
 
       <input
         type="text"
-        placeholder="📍 Location (Nairobi, Nakuru...)"
+        placeholder="Location (Nairobi, Nakuru, Naivasha, other places)"
         value={location}
-        onChange={e => setLocation(e.target.value)}
+        onChange={(e) => setLocation(e.target.value)}
         className="input-dark flex-1 px-4 py-3 rounded-xl text-sm"
       />
 
       <input
         type="number"
-        placeholder="💰 Max price / day"
+        placeholder="Max price / day"
         value={maxPrice}
-        onChange={e => setMaxPrice(e.target.value)}
+        onChange={(e) => setMaxPrice(e.target.value)}
         className="input-dark flex-1 px-4 py-3 rounded-xl text-sm"
       />
 

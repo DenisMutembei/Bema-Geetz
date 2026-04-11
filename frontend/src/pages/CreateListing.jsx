@@ -21,27 +21,52 @@ export default function CreateListing() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    // Debug log to see what's being sent
+    console.log('Form data:', form);
+    
     try {
       const payload = {
-        ...form,
+        title: form.title.trim(),
+        type: form.type,
         price: Number(form.price) || 0,
-        year: form.year ? parseInt(form.year, 10) : null,
-        bedrooms: form.bedrooms ? parseInt(form.bedrooms, 10) : null,
-        bathrooms: form.bathrooms ? parseInt(form.bathrooms, 10) : null,
+        location: form.location.trim(),
+        description: form.description.trim(),
+        images: form.images || []
       };
 
-      // Remove unset integer fields so backend inserts NULL
-      ['year', 'bedrooms', 'bathrooms'].forEach(field => {
-        if (payload[field] == null) delete payload[field];
-      });
+      console.log('Payload being sent:', payload);
 
-      await api.post('/listings', payload);
+      // Only include car-specific fields if type is car and fields have values
+      if (form.type === 'car') {
+        if (form.make?.trim()) payload.make = form.make.trim();
+        if (form.model?.trim()) payload.model = form.model.trim();
+        if (form.year) payload.year = parseInt(form.year, 10);
+      }
+
+      // Only include house-specific fields if type is house and fields have values
+      if (form.type === 'house') {
+        if (form.bedrooms) payload.bedrooms = parseInt(form.bedrooms, 10);
+        if (form.bathrooms) payload.bathrooms = parseInt(form.bathrooms, 10);
+      }
+
+      const response = await api.post('/listings', payload);
+      console.log('API response:', response.data);
+      
       if (user?.role === 'admin') navigate('/admin');
       else navigate('/host');
     } catch (err) {
       console.error('Create listing error:', err);
+      console.error('Error response:', err.response?.data);
       const apiError = err.response?.data?.error || err.response?.statusText || err.message;
-      setError(apiError || 'Failed to create listing');
+      
+      // Show specific validation errors if available
+      if (err.response?.data?.details) {
+        const validationErrors = err.response.data.details.map(d => `${d.field}: ${d.message}`).join(', ');
+        setError(`Validation failed: ${validationErrors}`);
+      } else {
+        setError(apiError || 'Failed to create listing');
+      }
     } finally {
       setLoading(false);
     }
@@ -100,7 +125,7 @@ export default function CreateListing() {
               <div>
                 <label className="block text-gray-400 text-xs tracking-wider uppercase mb-2">Location *</label>
                 <input name="location" required value={form.location} onChange={handleChange}
-                  placeholder="Nairobi, Westlands"
+                  placeholder="Nairobi, Nakuru, Naivasha, or another location"
                   className="input-dark w-full px-4 py-3 rounded-xl text-sm"/>
               </div>
             </div>
