@@ -12,15 +12,24 @@ export default function ListingDetail() {
   const { hasRequiredVerification } = useVerification();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
   useEffect(() => {
+    console.log('Fetching listing with ID:', id);
     api.get(`/listings/${id}`)
-      .then((r) => setListing(r.data))
-      .catch(() => navigate('/'))
+      .then((r) => {
+        console.log('Listing data received:', r.data);
+        setListing(r.data);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error('Error fetching listing:', err.response?.status, err.response?.data || err.message);
+        setError(err.response?.data?.error || 'Failed to load listing');
+      })
       .finally(() => setLoading(false));
-  }, [id, navigate]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -30,11 +39,40 @@ export default function ListingDetail() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen pt-20 pb-20 px-4 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">😕</div>
+          <h3 className="text-xl text-white mb-2">{error}</h3>
+          <p className="text-gray-400 mb-6">The listing you're looking for might have been removed or is temporarily unavailable.</p>
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="w-full bg-gold text-black py-3 rounded-xl font-semibold hover:bg-gold-light transition-colors"
+            >
+              Try Again
+            </button>
+            <Link 
+              to="/" 
+              className="block w-full border border-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors"
+            >
+              Go Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!listing) return null;
 
-  const images = listing.images?.length ? listing.images : [
-    `https://images.unsplash.com/photo-${listing.type === 'car' ? '1494976388531-d1058494cdd8' : '1560448204-e02f11c3d0e2'}?auto=format&fit=crop&w=1200&q=80`
-  ];
+  // Ensure images array with fallbacks
+  const images = (listing.images && Array.isArray(listing.images) && listing.images.length > 0) 
+    ? listing.images 
+    : [`https://images.unsplash.com/photo-${listing.type === 'car' ? '1494976388531-d1058494cdd8' : '1560448204-e02f11c3d0e2'}?auto=format&fit=crop&w=1200&q=80`];
+  
+  console.log('Images to display:', images);
   const waNumber = import.meta.env.VITE_WHATSAPP || '254700000000';
   const waText = encodeURIComponent(`Hello! I'm interested in "${listing.title}" listed on Bema Geetz. Could you provide more details?`);
   const isVideo = (url) => /\.(mp4|mov|avi|webm)$/i.test(url);
