@@ -15,10 +15,11 @@ const SVG_FALLBACKS = {
 };
 
 const ListingCard = memo(function ListingCard({ listing, priority = false }) {
-  // Use actual uploaded image or inline SVG fallback (zero network delay)
-  const hasValidImage = listing.images?.[0] && listing.images[0].startsWith('http');
+  // Ensure we have a valid image URL - check for http, https, or relative paths
+  const firstImage = listing.images?.[0];
+  const hasValidImage = firstImage && (firstImage.startsWith('http') || firstImage.startsWith('/uploads/'));
   const img = hasValidImage 
-    ? listing.images[0] 
+    ? firstImage 
     : SVG_FALLBACKS[listing.type] || SVG_FALLBACKS.house;
 
   return (

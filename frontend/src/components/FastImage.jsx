@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, memo } from 'react';
 
 // Preload image utility for instant display
 const preloadImage = (src) => {
@@ -26,6 +26,17 @@ const FastImage = memo(function FastImage({
   const [hasError, setHasError] = useState(false);
   const [imageSrc, setImageSrc] = useState(src);
   const imgRef = useRef(null);
+  
+  // Check if image is already complete (cached images)
+  const checkIfLoaded = () => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalHeight > 0 && !isLoaded) {
+      setIsLoaded(true);
+      setHasError(false);
+      imageCache.set(src, true);
+      onLoad?.();
+    }
+  };
 
   useEffect(() => {
     // Reset state when src changes
@@ -64,9 +75,15 @@ const FastImage = memo(function FastImage({
     if (!isLoaded) {
       imageCache.set(src, true);
       setIsLoaded(true);
+      setHasError(false);
       onLoad?.();
     }
   };
+
+  // Check immediately after render for cached images
+  useLayoutEffect(() => {
+    checkIfLoaded();
+  }, []);
 
   const handleError = () => {
     if (!hasError && imageSrc !== fallback) {
