@@ -25,9 +25,24 @@ export default function Booking() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/listings').then((r) => setListings(r.data)).catch(() => {});
+    api.get('/listings')
+      .then((r) => {
+        const listingsData = r.data?.listings || [];
+        console.log('Booking page - listings loaded:', listingsData.length);
+        setListings(listingsData);
+      })
+      .catch((err) => {
+        console.error('Failed to load listings:', err);
+        setListings([]);
+      });
+    
     if (form.listing_id) {
-      api.get(`/listings/${form.listing_id}`).then((r) => setListing(r.data)).catch(() => {});
+      api.get(`/listings/${form.listing_id}`)
+        .then((r) => setListing(r.data))
+        .catch((err) => {
+          console.error('Failed to load listing:', err);
+          setListing(null);
+        });
     }
   }, []);
 
