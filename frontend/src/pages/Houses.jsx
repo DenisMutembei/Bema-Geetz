@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useListings } from '../hooks/useApi';
 import ListingCard from '../components/ListingCard';
 import AdvancedSearch from '../components/AdvancedSearch';
 import VerificationBanner from '../components/VerificationBanner';
 import Pagination from '../components/Pagination';
-import LazyImage from '../components/LazyImage';
 
 export default function Houses() {
   const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   
-  const filters = {
+  // Memoize filters to prevent unnecessary re-renders
+  const filters = useMemo(() => ({
     type: 'house',
     page: currentPage,
     limit: 12,
@@ -20,12 +20,16 @@ export default function Houses() {
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     sortBy: searchParams.get('sortBy') || 'newest'
-  };
+  }), [searchParams, currentPage]);
 
   const { data, isLoading, error } = useListings(filters);
   
-  const handleSearch = (newFilters) => {
-    setCurrentPage(1); // Reset to first page when searching
+  // Extract listings and pagination with safe defaults
+  const listings = data?.listings || [];
+  const pagination = data?.pagination || { currentPage: 1, totalPages: 1, totalItems: 0 };
+  
+  const handleSearch = () => {
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page) => {
@@ -38,7 +42,7 @@ export default function Houses() {
       <div className="min-h-screen pt-20 pb-20 px-4 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-xl text-white mb-2">Error loading listings</h3>
-          <p className="text-gray-400">Please try again later</p>
+          <p className="text-gray-400">{error.message || 'Please try again later'}</p>
         </div>
       </div>
     );
@@ -68,28 +72,28 @@ export default function Houses() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(12)].map((_, i) => (
+            {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-gray-800 rounded-2xl h-72 animate-pulse border border-gray-700" />
             ))}
           </div>
-        ) : data?.listings?.length > 0 ? (
+        ) : listings.length > 0 ? (
           <>
             <div className="flex justify-between items-center mb-6">
               <p className="text-gray-400 text-sm">
-                {data.pagination.totalItems} propert{data.pagination.totalItems !== 1 ? 'ies' : 'y'} available
+                {pagination.totalItems} propert{pagination.totalItems !== 1 ? 'ies' : 'y'} available
               </p>
               <p className="text-gray-500 text-sm">
-                Page {data.pagination.currentPage} of {data.pagination.totalPages}
+                Page {pagination.currentPage} of {pagination.totalPages}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data.listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
+              {listings.map((listing, index) => (
+                <ListingCard key={listing.id} listing={listing} priority={index < 4} />
               ))}
             </div>
             <Pagination
-              currentPage={data.pagination.currentPage}
-              totalPages={data.pagination.totalPages}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
               onPageChange={handlePageChange}
               isLoading={isLoading}
             />
