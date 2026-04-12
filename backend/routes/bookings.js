@@ -37,8 +37,9 @@ router.post('/', async (req, res) => {
     const whatsappUrl = `https://wa.me/${waNumber}?text=${waText}`;
     res.status(201).json({ ...booking, whatsappUrl });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create booking' });
+    console.error('BOOKING ERROR:', err.message);
+    console.error('Stack:', err.stack);
+    res.status(500).json({ error: 'Failed to create booking: ' + err.message });
   }
 });
 
