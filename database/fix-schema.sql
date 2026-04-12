@@ -69,6 +69,75 @@ CREATE TABLE IF NOT EXISTS verifications (
   reviewed_at TIMESTAMP
 );
 
+-- Create bookings table if not exists
+CREATE TABLE IF NOT EXISTS bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  customer_name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  listing_id UUID REFERENCES listings(id) ON DELETE CASCADE,
+  invoice_id VARCHAR(50) UNIQUE NOT NULL,
+  check_in DATE,
+  check_out DATE,
+  message TEXT,
+  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Add user_id column to bookings if missing (for existing tables)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'user_id'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'customer_name'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN customer_name VARCHAR(255) NOT NULL DEFAULT '';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'invoice_id'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN invoice_id VARCHAR(50) UNIQUE;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'check_in'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN check_in DATE;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'check_out'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN check_out DATE;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'message'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN message TEXT;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'bookings' AND column_name = 'status'
+  ) THEN
+    ALTER TABLE bookings ADD COLUMN status VARCHAR(50) DEFAULT 'pending';
+  END IF;
+END $$;
+
 -- Update listings with verification requirements
 UPDATE listings
 SET
