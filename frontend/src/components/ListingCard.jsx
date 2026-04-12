@@ -9,17 +9,24 @@ const FALLBACK_IMAGES = {
 };
 
 const ListingCard = memo(function ListingCard({ listing, priority = false }) {
+  // Debug logging
+  console.log('ListingCard images:', listing.id, listing.images);
+  
   // Ensure we have a valid image URL
   const firstImage = listing.images?.[0];
+  console.log('First image:', firstImage);
+  
   // Accept http, https, or /uploads/ paths
   const hasValidImage = firstImage && (
     firstImage.startsWith('http://') || 
     firstImage.startsWith('https://') || 
     firstImage.startsWith('/uploads/')
   );
+  console.log('Has valid image:', hasValidImage);
   
   // Use the uploaded image, or a fallback
   const img = hasValidImage ? firstImage : FALLBACK_IMAGES[listing.type] || FALLBACK_IMAGES.house;
+  console.log('Final img src:', img);
 
   return (
     <Link to={`/listing/${listing.id}`} className="listing-card block rounded-xl overflow-hidden bg-dark-card border border-dark-border hover:border-gold/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold/10 hover:-translate-y-1 group">
