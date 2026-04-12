@@ -23,8 +23,8 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 102
 
 router.post('/', authMiddleware, upload.array('files', 10), (req, res) => {
   try {
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const urls = req.files.map(f => `${baseUrl}/uploads/${f.filename}`);
+    // Return relative paths instead of full URLs for better portability
+    const urls = req.files.map(f => `/uploads/${f.filename}`);
     res.json({ urls });
   } catch {
     res.status(500).json({ error: 'Upload failed' });
