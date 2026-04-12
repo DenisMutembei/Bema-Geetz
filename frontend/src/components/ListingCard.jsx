@@ -2,25 +2,24 @@ import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import FastImage from './FastImage';
 
-// Pre-computed fallback images (instant load)
+// Simple placeholder fallbacks using Unsplash
 const FALLBACK_IMAGES = {
-  car: '/placeholder-car.jpg',
-  house: '/placeholder-house.jpg'
-};
-
-// Inline SVG fallbacks for zero network requests
-const SVG_FALLBACKS = {
-  car: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23141414' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFD700' font-size='48'%3E🚗%3C/text%3E%3Ctext x='50%25' y='70%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ELuxury Car%3C/text%3E%3C/svg%3E`,
-  house: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23141414' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFD700' font-size='48'%3E🏠%3C/text%3E%3Ctext x='50%25' y='70%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3EPremium Home%3C/text%3E%3C/svg%3E`
+  car: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=400&q=80',
+  house: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&q=80'
 };
 
 const ListingCard = memo(function ListingCard({ listing, priority = false }) {
-  // Ensure we have a valid image URL - check for http, https, or relative paths
+  // Ensure we have a valid image URL
   const firstImage = listing.images?.[0];
-  const hasValidImage = firstImage && (firstImage.startsWith('http') || firstImage.startsWith('/uploads/'));
-  const img = hasValidImage 
-    ? firstImage 
-    : SVG_FALLBACKS[listing.type] || SVG_FALLBACKS.house;
+  // Accept http, https, or /uploads/ paths
+  const hasValidImage = firstImage && (
+    firstImage.startsWith('http://') || 
+    firstImage.startsWith('https://') || 
+    firstImage.startsWith('/uploads/')
+  );
+  
+  // Use the uploaded image, or a fallback
+  const img = hasValidImage ? firstImage : FALLBACK_IMAGES[listing.type] || FALLBACK_IMAGES.house;
 
   return (
     <Link to={`/listing/${listing.id}`} className="listing-card block rounded-xl overflow-hidden bg-dark-card border border-dark-border hover:border-gold/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold/10 hover:-translate-y-1 group">
@@ -31,7 +30,6 @@ const ListingCard = memo(function ListingCard({ listing, priority = false }) {
           alt={listing.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           priority={priority}
-          fallback={SVG_FALLBACKS[listing.type]}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"/>
         <span className="absolute top-3 left-3 badge-gold px-3 py-1 rounded-full">
