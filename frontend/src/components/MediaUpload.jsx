@@ -1,6 +1,19 @@
 import { useRef, useState } from 'react';
 import api from '../services/api';
 
+// Helper to convert relative image paths to full URLs
+const getBaseUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
+  return apiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+};
+
+const getFullImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('/uploads/')) return `${getBaseUrl()}${path}`;
+  return path;
+};
+
 export default function MediaUpload({ value = [], onChange, maxFiles = 10 }) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -70,9 +83,9 @@ export default function MediaUpload({ value = [], onChange, maxFiles = 10 }) {
           {value.map((url, i) => (
             <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-dark-border">
               {isVideo(url) ? (
-                <video src={url} className="w-full h-full object-cover" />
+                <video src={getFullImageUrl(url)} className="w-full h-full object-cover" />
               ) : (
-                <img src={url} alt={`media-${i}`} className="w-full h-full object-cover" />
+                <img src={getFullImageUrl(url)} alt={`media-${i}`} className="w-full h-full object-cover" />
               )}
               <button
                 type="button"

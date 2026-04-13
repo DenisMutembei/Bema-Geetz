@@ -5,6 +5,19 @@ import { useAuth } from '../context/AuthContext';
 import { useVerification } from '../context/VerificationContext';
 import VerificationBanner from '../components/VerificationBanner';
 
+// Helper to convert relative image paths to full URLs
+const getBaseUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
+  return apiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+};
+
+const getFullImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('/uploads/')) return `${getBaseUrl()}${path}`;
+  return path;
+};
+
 export default function ListingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -67,10 +80,13 @@ export default function ListingDetail() {
 
   if (!listing) return null;
 
-  // Ensure images array with fallbacks
-  const images = (listing.images && Array.isArray(listing.images) && listing.images.length > 0) 
+  // Ensure images array with fallbacks and convert relative paths to full URLs
+  const rawImages = (listing.images && Array.isArray(listing.images) && listing.images.length > 0) 
     ? listing.images 
     : [`https://images.unsplash.com/photo-${listing.type === 'car' ? '1494976388531-d1058494cdd8' : '1560448204-e02f11c3d0e2'}?auto=format&fit=crop&w=1200&q=80`];
+  
+  // Convert all image paths to full URLs
+  const images = rawImages.map(getFullImageUrl);
   
   console.log('Images to display:', images);
   const waNumber = import.meta.env.VITE_WHATSAPP || '254700000000';
