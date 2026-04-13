@@ -5,6 +5,12 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
+    healthCheckPath: /api/health
+    # Persistent storage for uploads (images/videos)
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/backend/uploads
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
@@ -18,6 +24,8 @@ services:
         value: https://your-frontend.vercel.app
       - key: WHATSAPP_NUMBER
         value: "254700000000"
+      - key: PORT
+        value: "10000"  # Render uses port 10000 by default
 
 databases:
   - name: bema-geetz-db
