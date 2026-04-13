@@ -81,11 +81,36 @@ npm run build
 
 ### 3.1 Access File Manager
 1. Log into your hosting control panel
-2. Click **"File Manager"**
+2. Click **"File Manager"** (usually has a folder icon)
 3. Navigate to `public_html` (or `www` or `htdocs`)
-4. **DELETE** any existing files (or move to backup)
+   - This is where your website files live
+   - You'll see the old website files here
 
-### 3.2 Upload Build Files
+### 3.2 Delete Previous Website (IMPORTANT!)
+**Option A - Delete Everything (Start Fresh):**
+1. In File Manager, you should be in `public_html`
+2. Click **"Select All"** (or checkbox at top)
+3. Click **"Delete"** button (trash icon)
+4. Confirm deletion
+5. Now `public_html` should be empty
+
+**Option B - Backup First (Safer):**
+1. Create a backup folder: Click **"New Folder"** → Name it `backup-old-site`
+2. Select all old website files
+3. Click **"Move"** → Select `backup-old-site` folder
+4. This keeps old site safe but removes it from main directory
+
+**What to Delete:**
+- ❌ All HTML files (`index.html`, `home.html`, etc.)
+- ❌ All folders (`assets`, `css`, `js`, `images`, `wp-content`, etc.)
+- ❌ Configuration files (`.htaccess`, etc.)
+- ✅ Keep: `cgi-bin` (if exists, system folder)
+
+### 3.3 Verify Empty
+- `public_html` should now be empty or only have `cgi-bin`
+- This is correct! Ready for new upload
+
+### 3.4 Upload Build Files
 **Option A - File Manager Upload:**
 1. In File Manager, click **"Upload"** button
 2. Select ALL files from your `frontend/dist` folder
