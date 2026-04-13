@@ -32,6 +32,15 @@ const ListingCard = memo(function ListingCard({ listing, priority = false }) {
       img = `${baseUrl}${firstImage}`;
     }
   }
+  
+  // DEBUG: Log what's happening
+  console.log('ListingCard Debug:', {
+    id: listing.id,
+    rawImage: firstImage,
+    baseUrl: getBaseUrl(),
+    finalImg: img,
+    envApiUrl: import.meta.env.VITE_API_URL
+  });
 
   return (
     <Link to={`/listing/${listing.id}`} className="listing-card block rounded-xl overflow-hidden bg-dark-card border border-dark-border hover:border-gold/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold/10 hover:-translate-y-1 group">

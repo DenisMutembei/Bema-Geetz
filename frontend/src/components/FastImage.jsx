@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 
 // Simple, reliable image component
 const FastImage = memo(function FastImage({ 
@@ -12,8 +12,17 @@ const FastImage = memo(function FastImage({
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Reset error state when src changes (allows retry)
+  useEffect(() => {
+    setHasError(false);
+    setIsLoading(true);
+  }, [src]);
+  
   // Use fallback if error or no src
   const imageSrc = hasError || !src ? fallback : src;
+  
+  // DEBUG
+  console.log('FastImage rendering:', { src, imageSrc, hasError, isLoading });
 
   return (
     <div className={`relative overflow-hidden bg-dark-card ${className}`}>
