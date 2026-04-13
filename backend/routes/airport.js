@@ -97,4 +97,68 @@ router.get('/bookings/my', authMiddleware, async (req, res) => {
   }
 });
 
+// Admin routes for managing airport services
+router.post('/services', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, vehicle_type, price, max_passengers, max_luggage } = req.body;
+    
+    const result = await pool.query(
+      `INSERT INTO airport_services (name, description, vehicle_type, price, max_passengers, max_luggage, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
+       RETURNING *`,
+      [name, description, vehicle_type, price, max_passengers, max_luggage]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/services/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, vehicle_type, price, max_passengers, max_luggage, is_active } = req.body;
+    
+    const result = await pool.query(
+      `UPDATE airport_services 
+       SET name = $1, description = $2, vehicle_type = $3, price = $4, 
+           max_passengers = $5, max_luggage = $6, is_active = $7
+       WHERE id = $8
+       RETURNING *`,
+      [name, description, vehicle_type, price, max_passengers, max_luggage, is_active, id]
+    );
+    
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/services/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'DELETE FROM airport_services WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    
+    res.json({ message: 'Service deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
