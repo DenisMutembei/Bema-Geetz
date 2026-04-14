@@ -123,19 +123,28 @@ INSERT INTO settings (setting_key, setting_value, setting_group) VALUES
 ('company_phone', '+254 700 000 000', 'general'),
 ('company_address', 'Nairobi, Kenya', 'general'),
 ('company_kra_pin', 'P000000000X', 'general'),
-('mpesa_shortcode', '174379', 'payment'),
-('mpesa_passkey', 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919', 'payment'),
+-- Flutterwave Payment (Unified - Cards, M-Pesa, Bank, USSD)
+('flutterwave_public_key', '', 'payment'),
+('flutterwave_secret_key', '', 'payment'),
+('flutterwave_encryption_key', '', 'payment'),
+('flutterwave_environment', 'sandbox', 'payment'),
+-- M-Pesa Direct (Optional backup)
+('mpesa_shortcode', '', 'payment'),
+('mpesa_passkey', '', 'payment'),
 ('mpesa_consumer_key', '', 'payment'),
 ('mpesa_consumer_secret', '', 'payment'),
 ('mpesa_environment', 'sandbox', 'payment'),
+-- Email Settings
 ('smtp_host', 'smtp.gmail.com', 'email'),
 ('smtp_port', '587', 'email'),
 ('smtp_username', '', 'email'),
 ('smtp_password', '', 'email'),
 ('smtp_from_name', 'Bema Geetz', 'email'),
+-- SMS Settings
 ('sms_provider', 'africastalking', 'sms'),
 ('sms_api_key', '', 'sms'),
 ('sms_username', '', 'sms'),
+-- General Settings
 ('currency', 'KES', 'general'),
 ('tax_rate', '0', 'general'),
 ('booking_deposit_percent', '100', 'general'),
