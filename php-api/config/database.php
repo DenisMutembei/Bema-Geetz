@@ -11,10 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database credentials - UPDATE THESE with your hosting details
+// For local XAMPP/WAMP: use 'localhost', 'root', '' (no password)
+// For hosting: use your cPanel database credentials
 $db_host = getenv('DB_HOST') ?: 'localhost';
 $db_name = getenv('DB_NAME') ?: 'bemageetz_db';
-$db_user = getenv('DB_USER') ?: 'bemageetz_user';
-$db_pass = getenv('DB_PASS') ?: 'your_password_here';
+$db_user = getenv('DB_USER') ?: 'root';      // Use 'root' for local XAMPP
+$db_pass = getenv('DB_PASS') ?: '';          // Empty for local XAMPP
 
 try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
