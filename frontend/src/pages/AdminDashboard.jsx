@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 
-const TABS = ['overview', 'listings', 'bookings', 'users', 'airport'];
+const TABS = ['overview', 'listings', 'bookings', 'users', 'airport', 'payments'];
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
   const [airportServices, setAirportServices] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [editingService, setEditingService] = useState(null);
   const [serviceForm, setServiceForm] = useState({
     name: '',
@@ -29,12 +30,14 @@ export default function AdminDashboard() {
       api.get('/admin/bookings'),
       api.get('/admin/users'),
       api.get('/airport/services'),
-    ]).then(([s, l, b, u, a]) => {
+      api.get('/admin/payments'),
+    ]).then(([s, l, b, u, a, p]) => {
       setStats(s.data);
       setListings(l.data);
       setBookings(b.data);
       setUsers(u.data);
       setAirportServices(a.data);
+      setPayments(p.data?.payments || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -426,6 +429,66 @@ export default function AdminDashboard() {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payments */}
+            {tab === 'payments' && (
+              <div className="bg-dark-card border border-dark-border rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-dark-border flex justify-between items-center">
+                  <span className="text-gray-400 text-sm">{payments.length} payments</span>
+                  <div className="text-sm text-gray-400">
+                    Total Revenue: <span className="text-gold font-bold">
+                      KES {payments.filter(p => p.payment_status === 'completed').reduce((sum, p) => sum + parseFloat(p.amount), 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-dark-border">
+                        {['Date', 'Invoice', 'Customer', 'Amount', 'Method', 'Status', 'Transaction'].map(h => (
+                          <th key={h} className="text-left px-4 py-3 text-gray-500 text-xs tracking-wider uppercase">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-dark-border">
+                      {payments.map(p => (
+                        <tr key={p.id} className="hover:bg-dark/50 transition-colors">
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {new Date(p.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-gold font-bold text-xs">{p.invoice_id || p.booking_id?.slice(0, 8)}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-white text-sm">{p.customer_name || 'N/A'}</div>
+                            <div className="text-gray-500 text-xs">{p.mpesa_phone || p.customer_phone}</div>
+                          </td>
+                          <td className="px-4 py-3 text-gold font-bold text-sm">
+                            {p.currency} {Number(p.amount).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="badge-gold px-2 py-1 rounded-full text-xs uppercase">{p.payment_method}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs border ${
+                              p.payment_status === 'completed' ? 'bg-green-900/30 border-green-700 text-green-400' :
+                              p.payment_status === 'pending' ? 'bg-yellow-900/30 border-yellow-700 text-yellow-400' :
+                              p.payment_status === 'failed' ? 'bg-red-900/30 border-red-700 text-red-400' :
+                              'bg-gray-900/30 border-gray-700 text-gray-400'
+                            }`}>
+                              {p.payment_status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {p.mpesa_receipt || p.transaction_code || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
