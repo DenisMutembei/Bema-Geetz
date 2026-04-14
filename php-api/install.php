@@ -6,7 +6,7 @@ require_once __DIR__ . '/config/database.php';
 
 try {
     // Read and execute schema
-    $schema = file_get_contents(__DIR__ . '/../database/mysql-schema.sql');
+    $schema = file_get_contents(__DIR__ . '/../database/schema.sql');
     
     // Split by semicolons to execute each statement
     $statements = array_filter(array_map('trim', explode(';', $schema)));
