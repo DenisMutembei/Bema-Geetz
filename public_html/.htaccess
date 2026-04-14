@@ -1,0 +1,50 @@
+# Apache Configuration for Bema Geetz (Shared Hosting Version)
+# Place this in public_html/ folder
+
+RewriteEngine On
+RewriteBase /
+
+# If the request is for a file or directory that exists, serve it
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# API requests - route to php-api
+RewriteRule ^api/(.*)$ /php-api/$1 [L]
+
+# Uploads - serve directly
+RewriteRule ^uploads/(.*)$ /uploads/$1 [L]
+
+# Frontend routing - serve index.html for all other routes (React Router)
+RewriteRule ^ index.html [L]
+
+# PHP Settings
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+
+# Security Headers
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-XSS-Protection "1; mode=block"
+
+# Enable CORS for API
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(sql|log|ini)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

@@ -1,0 +1,50 @@
+# Apache Rewrite Rules for Bema Geetz PHP API
+RewriteEngine On
+RewriteBase /
+
+# Allow direct access to uploads directory
+RewriteRule ^uploads/ - [L]
+
+# API Routing
+# Auth endpoints
+RewriteRule ^api/auth/login$ /php-api/auth/login.php [L]
+RewriteRule ^api/auth/register$ /php-api/auth/register.php [L]
+
+# Listings endpoints
+RewriteRule ^api/listings$ /php-api/listings/index.php [L]
+RewriteRule ^api/listings/([a-zA-Z0-9]+)$ /php-api/listings/index.php?id=$1 [L]
+RewriteRule ^api/listings/update$ /php-api/listings/update.php [L]
+
+# Bookings endpoints
+RewriteRule ^api/bookings$ /php-api/bookings/index.php [L]
+RewriteRule ^api/bookings/my$ /php-api/bookings/index.php [L]
+
+# Airport endpoints
+RewriteRule ^api/airport/services$ /php-api/airport/services.php [L]
+RewriteRule ^api/airport/bookings$ /php-api/airport/bookings.php [L]
+RewriteRule ^api/airport/services/([a-zA-Z0-9]+)$ /php-api/airport/services.php?id=$1 [L]
+
+# Upload endpoint
+RewriteRule ^api/upload$ /php-api/upload/index.php [L]
+
+# Admin endpoints
+RewriteRule ^api/admin/stats$ /php-api/admin/stats.php [L]
+RewriteRule ^api/admin/listings$ /php-api/admin/listings.php [L]
+RewriteRule ^api/admin/listings/([a-zA-Z0-9]+)$ /php-api/admin/listings.php?id=$1 [L]
+RewriteRule ^api/admin/bookings$ /php-api/admin/bookings.php [L]
+RewriteRule ^api/admin/users$ /php-api/admin/users.php [L]
+RewriteRule ^api/admin/users/([a-zA-Z0-9]+)$ /php-api/admin/users.php?id=$1 [L]
+
+# PHP Settings
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+
+# Enable CORS
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Handle preflight
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
