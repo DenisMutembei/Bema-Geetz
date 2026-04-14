@@ -1,146 +1,181 @@
--- Bema Geetz Database Schema
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Bema Geetz PRO Database Schema - Professional Booking System
+-- Enhanced with payments, invoices, receipts, and notifications
 
-CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(50) DEFAULT 'customer' CHECK (role IN ('admin', 'host', 'customer')),
-  phone VARCHAR(20),
-  created_at TIMESTAMP DEFAULT NOW()
-);
+-- Payments table
+CREATE TABLE IF NOT EXISTS payments (
+    id VARCHAR(32) PRIMARY KEY,
+    booking_id VARCHAR(32),
+    booking_type ENUM('listing', 'airport') DEFAULT 'listing',
+    amount DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'KES',
+    payment_method ENUM('mpesa', 'card', 'bank_transfer', 'cash') DEFAULT 'mpesa',
+    payment_status ENUM('pending', 'processing', 'completed', 'failed', 'refunded') DEFAULT 'pending',
+    transaction_code VARCHAR(100),
+    mpesa_receipt VARCHAR(100),
+    mpesa_phone VARCHAR(20),
+    mpesa_merchant_request_id VARCHAR(100),
+    mpesa_checkout_request_id VARCHAR(100),
+    paid_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_id INTEGER;
+-- Invoices table (generated PDF invoices)
+CREATE TABLE IF NOT EXISTS invoices (
+    id VARCHAR(32) PRIMARY KEY,
+    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+    booking_id VARCHAR(32),
+    user_id VARCHAR(32),
+    customer_name VARCHAR(255),
+    customer_email VARCHAR(255),
+    customer_phone VARCHAR(20),
+    item_description TEXT,
+    amount DECIMAL(10,2) NOT NULL,
+    tax_amount DECIMAL(10,2) DEFAULT 0,
+    total_amount DECIMAL(10,2) NOT NULL,
+    due_date DATE,
+    status ENUM('draft', 'sent', 'paid', 'overdue', 'cancelled') DEFAULT 'draft',
+    pdf_path VARCHAR(255),
+    sent_at TIMESTAMP NULL,
+    paid_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS listings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title VARCHAR(255) NOT NULL,
-  type VARCHAR(50) NOT NULL CHECK (type IN ('car', 'house')),
-  price DECIMAL(10,2) NOT NULL,
-  location VARCHAR(255) NOT NULL,
-  images TEXT[] DEFAULT '{}',
-  description TEXT,
-  host_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  available BOOLEAN DEFAULT true,
-  make VARCHAR(100),
-  model VARCHAR(100),
-  year INTEGER,
-  bedrooms INTEGER,
-  bathrooms INTEGER,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+-- Receipts table (after payment confirmation)
+CREATE TABLE IF NOT EXISTS receipts (
+    id VARCHAR(32) PRIMARY KEY,
+    receipt_number VARCHAR(50) UNIQUE NOT NULL,
+    invoice_id VARCHAR(32),
+    payment_id VARCHAR(32),
+    booking_id VARCHAR(32),
+    user_id VARCHAR(32),
+    customer_name VARCHAR(255),
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(50),
+    transaction_reference VARCHAR(100),
+    pdf_path VARCHAR(255),
+    sent_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE listings ADD COLUMN IF NOT EXISTS requires_verification BOOLEAN DEFAULT false;
-ALTER TABLE listings ADD COLUMN IF NOT EXISTS verification_type VARCHAR(50);
+-- Email notifications log
+CREATE TABLE IF NOT EXISTS email_notifications (
+    id VARCHAR(32) PRIMARY KEY,
+    recipient_email VARCHAR(255) NOT NULL,
+    recipient_name VARCHAR(255),
+    email_type ENUM('booking_confirmation', 'payment_received', 'invoice', 'receipt', 'booking_reminder', 'admin_alert') NOT NULL,
+    subject VARCHAR(255),
+    template VARCHAR(100),
+    booking_id VARCHAR(32),
+    sent_at TIMESTAMP NULL,
+    opened_at TIMESTAMP NULL,
+    status ENUM('queued', 'sent', 'failed', 'bounced') DEFAULT 'queued',
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  customer_name VARCHAR(255) NOT NULL,
-  phone VARCHAR(20) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  listing_id UUID REFERENCES listings(id) ON DELETE CASCADE,
-  invoice_id VARCHAR(50) UNIQUE NOT NULL,
-  check_in DATE,
-  check_out DATE,
-  message TEXT,
-  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
-  created_at TIMESTAMP DEFAULT NOW()
-);
+-- SMS notifications log
+CREATE TABLE IF NOT EXISTS sms_notifications (
+    id VARCHAR(32) PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL,
+    message TEXT NOT NULL,
+    sms_type ENUM('booking_confirmation', 'payment_received', 'reminder', 'admin_alert') NOT NULL,
+    booking_id VARCHAR(32),
+    sent_at TIMESTAMP NULL,
+    status ENUM('queued', 'sent', 'failed') DEFAULT 'queued',
+    provider_response TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS verifications (
-  id SERIAL PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  verification_type VARCHAR(50) NOT NULL CHECK (verification_type IN ('driving_license', 'national_id')),
-  legal_name VARCHAR(255) NOT NULL,
-  document_number VARCHAR(100) NOT NULL,
-  document_image_url VARCHAR(500) NOT NULL,
-  selfie_image_url VARCHAR(500),
-  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  match_status VARCHAR(20) DEFAULT 'pending' CHECK (match_status IN ('pending', 'matched', 'mismatch')),
-  admin_notes TEXT,
-  submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  reviewed_at TIMESTAMP
-);
+-- Booking status history tracking
+CREATE TABLE IF NOT EXISTS booking_status_history (
+    id VARCHAR(32) PRIMARY KEY,
+    booking_id VARCHAR(32) NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
+    changed_by VARCHAR(32),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM information_schema.table_constraints
-    WHERE constraint_name = 'users_verification_id_fkey'
-      AND table_name = 'users'
-  ) THEN
-    ALTER TABLE users
-    ADD CONSTRAINT users_verification_id_fkey
-    FOREIGN KEY (verification_id)
-    REFERENCES verifications(id);
-  END IF;
-END $$;
+-- Settings table for configuration
+CREATE TABLE IF NOT EXISTS settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    setting_group VARCHAR(50) DEFAULT 'general',
+    is_encrypted TINYINT(1) DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS airport_services (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
-  vehicle_type VARCHAR(50),
-  price DECIMAL(10,2) NOT NULL,
-  max_passengers INTEGER DEFAULT 4,
-  max_luggage INTEGER DEFAULT 2,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Insert default settings
+INSERT INTO settings (setting_key, setting_value, setting_group) VALUES
+('company_name', 'Bema Geetz Limited', 'general'),
+('company_email', 'bookings@bemageetz.com', 'general'),
+('company_phone', '+254 700 000 000', 'general'),
+('company_address', 'Nairobi, Kenya', 'general'),
+('company_kra_pin', 'P000000000X', 'general'),
+-- Flutterwave Payment (Unified - Cards, M-Pesa, Bank, USSD)
+('flutterwave_public_key', '', 'payment'),
+('flutterwave_secret_key', '', 'payment'),
+('flutterwave_encryption_key', '', 'payment'),
+('flutterwave_environment', 'sandbox', 'payment'),
+-- M-Pesa Direct (Optional backup)
+('mpesa_shortcode', '', 'payment'),
+('mpesa_passkey', '', 'payment'),
+('mpesa_consumer_key', '', 'payment'),
+('mpesa_consumer_secret', '', 'payment'),
+('mpesa_environment', 'sandbox', 'payment'),
+-- Email Settings
+('smtp_host', 'smtp.gmail.com', 'email'),
+('smtp_port', '587', 'email'),
+('smtp_username', '', 'email'),
+('smtp_password', '', 'email'),
+('smtp_from_name', 'Bema Geetz', 'email'),
+-- SMS Settings
+('sms_provider', 'africastalking', 'sms'),
+('sms_api_key', '', 'sms'),
+('sms_username', '', 'sms'),
+-- General Settings
+('currency', 'KES', 'general'),
+('tax_rate', '0', 'general'),
+('booking_deposit_percent', '100', 'general'),
+('cancellation_policy', 'Full refund if cancelled 48 hours before booking', 'general')
+ON DUPLICATE KEY UPDATE setting_key=setting_key;
 
-CREATE TABLE IF NOT EXISTS airport_bookings (
-  id SERIAL PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  service_id INTEGER REFERENCES airport_services(id),
-  flight_number VARCHAR(50),
-  airport_name VARCHAR(100) NOT NULL,
-  pickup_address TEXT,
-  dropoff_address TEXT,
-  booking_date DATE NOT NULL,
-  booking_time TIME NOT NULL,
-  passenger_count INTEGER DEFAULT 1,
-  luggage_count INTEGER DEFAULT 0,
-  special_requests TEXT,
-  status VARCHAR(20) DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'completed')),
-  total_price DECIMAL(10,2) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Update existing bookings table with new fields
+ALTER TABLE bookings 
+ADD COLUMN IF NOT EXISTS total_amount DECIMAL(10,2) AFTER message,
+ADD COLUMN IF NOT EXISTS deposit_amount DECIMAL(10,2) AFTER total_amount,
+ADD COLUMN IF NOT EXISTS balance_amount DECIMAL(10,2) AFTER deposit_amount,
+ADD COLUMN IF NOT EXISTS payment_status ENUM('unpaid', 'partial', 'paid', 'refunded') DEFAULT 'unpaid' AFTER balance_amount,
+ADD COLUMN IF NOT EXISTS cancellation_reason TEXT AFTER payment_status,
+ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP NULL AFTER cancellation_reason,
+ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMP NULL,
+ADD COLUMN IF NOT EXISTS checked_out_at TIMESTAMP NULL;
 
-CREATE TABLE IF NOT EXISTS reviews (
-  id SERIAL PRIMARY KEY,
-  listing_id UUID REFERENCES listings(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  comment TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (listing_id, user_id)
-);
+-- Update airport_bookings similarly
+ALTER TABLE airport_bookings 
+ADD COLUMN IF NOT EXISTS payment_status ENUM('unpaid', 'partial', 'paid', 'refunded') DEFAULT 'unpaid' AFTER status,
+ADD COLUMN IF NOT EXISTS cancellation_reason TEXT,
+ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP NULL;
 
-UPDATE listings
-SET
-  requires_verification = true,
-  verification_type = CASE
-    WHEN type = 'car' THEN 'driving_license'
-    WHEN type = 'house' THEN 'national_id'
-    ELSE verification_type
-  END
-WHERE type IN ('car', 'house');
+-- Create indexes for performance
+CREATE INDEX idx_payments_booking ON payments(booking_id);
+CREATE INDEX idx_payments_status ON payments(payment_status);
+CREATE INDEX idx_invoices_booking ON invoices(booking_id);
+CREATE INDEX idx_invoices_status ON invoices(status);
+CREATE INDEX idx_receipts_booking ON receipts(booking_id);
+CREATE INDEX idx_booking_status_history_booking ON booking_status_history(booking_id);
 
-INSERT INTO airport_services (name, description, vehicle_type, price, max_passengers, max_luggage)
-SELECT * FROM (
-  VALUES
-    ('Economy Pickup', 'Affordable airport transfer', 'sedan', 25.00, 4, 2),
-    ('Business Class', 'Premium luxury sedan', 'luxury', 60.00, 3, 3),
-    ('Family Van', 'Spacious for groups', 'van', 45.00, 8, 6),
-    ('Round Trip', 'Pickup and return', 'sedan', 45.00, 4, 2)
-) AS seed(name, description, vehicle_type, price, max_passengers, max_luggage)
-WHERE NOT EXISTS (SELECT 1 FROM airport_services);
-
--- Seed admin user (password: admin123)
-INSERT INTO users (name, email, password, role) VALUES
-('Admin', 'admin@bemageetz.com', '$2b$10$rOzJqJvJvJvJvJvJvJvJvOzJqJvJvJvJvJvJvJvJvJvJvJvJvJvJv', 'admin')
-ON CONFLICT DO NOTHING;
+-- Add indexes for better performance
+CREATE INDEX idx_bookings_payment_status ON bookings(payment_status);
+CREATE INDEX idx_bookings_dates ON bookings(check_in, check_out);
