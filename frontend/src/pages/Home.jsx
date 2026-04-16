@@ -13,8 +13,8 @@ export default function Home() {
   const [houses, setHouses] = useState([]);
 
   useEffect(() => {
-    api.get('/listings').then((r) => {
-      const all = r.data.listings || [];
+    api.get('/listings/index.php').then((r) => {
+      const all = r.data.data || r.data.listings || [];
       setFeatured(all.slice(0, 6));
       setCars(all.filter((l) => l.type === 'car').slice(0, 3));
       setHouses(all.filter((l) => l.type === 'house').slice(0, 3));
@@ -51,7 +51,7 @@ export default function Home() {
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto" style={{ marginTop: '4rem' }}>
           <div className="fade-in-up flex justify-center mb-8" style={{ animationDelay: '0s' }}>
             <img
-              src="/logo_bema.jpeg"
+              src="/bemageetz/logo_bema.jpeg"
               alt="Bema Geetz"
               className="w-[150px] h-[150px] rounded-full border-4 border-gold object-cover shadow-[0_0_30px_rgba(212,175,55,0.5)]"
             />
@@ -188,7 +188,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-dark via-dark-card to-dark border-y border-dark-border" />
         <div className="relative max-w-3xl mx-auto text-center">
           <div className="w-16 h-16 rounded-full border-2 border-gold flex items-center justify-center mx-auto mb-6">
-            <img src="/logo_bema.jpeg" alt="Bema Geetz" className="w-14 h-14 rounded-full object-cover" />
+            <img src="/bemageetz/logo_bema.jpeg" alt="Bema Geetz" className="w-14 h-14 rounded-full object-cover" />
           </div>
           <h2 className="font-display text-4xl text-white mb-4">
             <span className="gold-shimmer">Redefining</span> Excellence

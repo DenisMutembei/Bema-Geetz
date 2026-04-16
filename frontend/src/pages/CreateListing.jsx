@@ -56,7 +56,7 @@ export default function CreateListing() {
         if (form.bathrooms) payload.bathrooms = parseInt(form.bathrooms, 10);
       }
 
-      const response = await api.post('/listings', payload);
+      const response = await api.post('/listings/index.php', payload);
       console.log('API response:', response.data);
       
       if (user?.role === 'admin') navigate('/admin');

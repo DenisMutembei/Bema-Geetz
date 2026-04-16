@@ -36,7 +36,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3 group flex-shrink-0 z-10">
             <img
-              src="/logo_bema.jpeg"
+              src="/bemageetz/logo_bema.jpeg"
               alt="Bema Geetz"
               className="h-10 w-10 rounded-full border-2 border-gold object-cover shadow-[0_0_16px_rgba(212,175,55,0.25)]"
             />

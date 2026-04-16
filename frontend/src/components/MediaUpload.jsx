@@ -10,7 +10,13 @@ const getBaseUrl = () => {
 const getFullImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (path.startsWith('/uploads/')) return `${getBaseUrl()}${path}`;
+  // Handle both /bemageetz/uploads/ and /uploads/ paths
+  if (path.startsWith('/bemageetz/uploads/') || path.startsWith('/uploads/')) {
+    // Remove cache-busting query params for display
+    const cleanPath = path.split('?')[0];
+    if (cleanPath.startsWith('/bemageetz/uploads/')) return cleanPath;
+    if (cleanPath.startsWith('/uploads/')) return `${getBaseUrl()}${cleanPath}`;
+  }
   return path;
 };
 
@@ -24,16 +30,32 @@ export default function MediaUpload({ value = [], onChange, maxFiles = 10 }) {
     setUploading(true);
     setProgress(0);
 
+    console.log('Starting upload. Current value length:', value.length);
+    console.log('Files to upload:', files.length);
+
     try {
       const formData = new FormData();
       Array.from(files).slice(0, maxFiles).forEach((f) => formData.append('files', f));
-      const res = await api.post('/upload', formData, {
+      const res = await api.post('/upload/index.php', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (e) => setProgress(Math.round((e.loaded * 100) / e.total))
       });
-      onChange([...value, ...res.data.urls].slice(0, maxFiles));
+      console.log('Upload response:', res.data);
+      const urls = res.data.urls || [];
+      console.log('URLs returned:', urls.length);
+      if (urls.length === 0) {
+        alert('No files were uploaded successfully - check file type and size');
+      }
+      const newValue = [...value, ...urls].slice(0, maxFiles);
+      console.log('New value array length:', newValue.length);
+      console.log('New value array:', newValue);
+      onChange(newValue);
     } catch (err) {
-      alert(`Upload failed: ${err.response?.data?.error || err.message}`);
+      console.error('Upload error:', err);
+      console.error('Error response:', err.response);
+      const errorMsg = err.response?.data?.error || err.message;
+      const status = err.response?.status;
+      alert(`Upload failed (${status}): ${errorMsg}\n\nNote: You must be logged in to upload images.`);
     } finally {
       setUploading(false);
       setProgress(0);

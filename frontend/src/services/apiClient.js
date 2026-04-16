@@ -3,7 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 
 // Create axios instance with retry configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/bemageetz/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -78,39 +78,39 @@ export const queryClient = new QueryClient({
 export const api = {
   // Auth endpoints
   auth: {
-    login: (credentials) => apiClient.post('/auth/login', credentials),
-    register: (userData) => apiClient.post('/auth/register', userData),
-    getMe: () => apiClient.get('/auth/me'),
+    login: (credentials) => apiClient.post('/auth/login.php', credentials),
+    register: (userData) => apiClient.post('/auth/register.php', userData),
+    getMe: () => apiClient.get('/auth/me.php'),
   },
-  
+
   // Listings endpoints
   listings: {
-    getAll: (params = {}) => apiClient.get('/listings', { params }),
-    getById: (id) => apiClient.get(`/listings/${id}`),
-    create: (data) => apiClient.post('/listings', data),
-    update: (id, data) => apiClient.put(`/listings/${id}`, data),
-    delete: (id) => apiClient.delete(`/listings/${id}`),
-    getMyListings: () => apiClient.get('/listings/host/mine'),
+    getAll: (params = {}) => apiClient.get('/listings/index.php', { params }),
+    getById: (id) => apiClient.get(`/listings/index.php?id=${id}`),
+    create: (data) => apiClient.post('/listings/index.php', data),
+    update: (id, data) => apiClient.put(`/listings/update.php?id=${id}`, data),
+    delete: (id) => apiClient.delete(`/listings/index.php?id=${id}`),
+    getMyListings: () => apiClient.get('/listings/host.php'),
   },
-  
+
   // Bookings endpoints
   bookings: {
-    create: (data) => apiClient.post('/bookings', data),
-    getAll: (params = {}) => apiClient.get('/admin/bookings', { params }),
-    getMyBookings: () => apiClient.get('/bookings/my'),
+    create: (data) => apiClient.post('/bookings/create.php', data),
+    getAll: (params = {}) => apiClient.get('/admin/bookings.php', { params }),
+    getMyBookings: () => apiClient.get('/bookings/my.php'),
   },
-  
+
   // Admin endpoints
   admin: {
-    getStats: () => apiClient.get('/admin/stats'),
-    getUsers: () => apiClient.get('/admin/users'),
-    getAllListings: () => apiClient.get('/admin/listings'),
-    getAllBookings: () => apiClient.get('/admin/bookings'),
+    getStats: () => apiClient.get('/admin/stats.php'),
+    getUsers: () => apiClient.get('/admin/users.php'),
+    getAllListings: () => apiClient.get('/admin/listings.php'),
+    getAllBookings: () => apiClient.get('/admin/bookings.php'),
   },
-  
+
   // Upload endpoint
   upload: {
-    uploadFile: (formData) => apiClient.post('/upload', formData, {
+    uploadFile: (formData) => apiClient.post('/upload/index.php', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

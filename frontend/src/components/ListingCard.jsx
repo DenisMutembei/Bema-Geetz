@@ -26,10 +26,9 @@ const ListingCard = memo(function ListingCard({ listing, priority = false }) {
     if (firstImage.startsWith('http://') || firstImage.startsWith('https://')) {
       // Already full URL
       img = firstImage;
-    } else if (firstImage.startsWith('/uploads/')) {
-      // Relative path - prepend API base URL
-      const baseUrl = getBaseUrl();
-      img = `${baseUrl}${firstImage}`;
+    } else if (firstImage.startsWith('/bemageetz/uploads/') || firstImage.startsWith('/uploads/')) {
+      // Relative path - use as-is for subdirectory hosting
+      img = firstImage.split('?')[0]; // Remove cache-busting query param
     }
   }
   

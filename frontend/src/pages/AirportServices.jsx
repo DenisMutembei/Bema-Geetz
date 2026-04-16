@@ -30,7 +30,7 @@ export default function AirportServices() {
   const { user } = useAuth();
 
   useEffect(() => {
-    api.get('/airport/services').then((res) => setServices(res.data)).catch(() => setServices([]));
+    api.get('/airport/services.php').then((res) => setServices(res.data)).catch(() => setServices([]));
   }, []);
 
   const handleBooking = async (e) => {
@@ -44,7 +44,7 @@ export default function AirportServices() {
 
     try {
       setSubmitting(true);
-      await api.post('/airport/bookings', { serviceId: selectedService.id, ...formData });
+      await api.post('/airport/bookings.php', { serviceId: selectedService.id, ...formData });
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Booking failed');

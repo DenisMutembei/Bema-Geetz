@@ -35,7 +35,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <VerificationProvider>
-            <BrowserRouter>
+            <BrowserRouter basename="/bemageetz">
               <div className="min-h-screen bg-dark text-white">
                 <Navbar />
                 <Routes>

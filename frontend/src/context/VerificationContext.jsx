@@ -15,7 +15,7 @@ export function VerificationProvider({ children }) {
     }
 
     try {
-      const res = await api.get('/verification/status');
+      const res = await api.get('/verification/status.php');
       setStatus({ ...res.data, loading: false });
     } catch {
       setStatus({ isVerified: false, verification: null, loading: false });

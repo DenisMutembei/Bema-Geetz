@@ -17,7 +17,7 @@ export default function Register() {
     setError('');
 
     try {
-      const res = await api.post('/auth/register', form);
+      const res = await api.post('/auth/register.php', form);
       login(res.data.token, res.data.user);
       const next = searchParams.get('next');
       if (next && res.data.user.role !== 'host') navigate(next);

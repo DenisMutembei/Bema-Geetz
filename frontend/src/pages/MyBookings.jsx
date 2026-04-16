@@ -12,8 +12,8 @@ export default function MyBookings() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/bookings/my'),
-      api.get('/airport/bookings/my')
+      api.get('/bookings/my.php'),
+      api.get('/airport/bookings.php')
     ]).then(([rentals, airport]) => {
       setRentalBookings(rentals.data?.bookings || rentals.data || []);
       setAirportBookings(airport.data || []);

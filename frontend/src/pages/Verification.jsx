@@ -30,7 +30,7 @@ export default function Verification() {
     formData.append('file', file);
 
     try {
-      const res = await api.post('/verification/upload', formData, {
+      const res = await api.post('/verification/upload.php', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setter(res.data.url);
@@ -79,7 +79,7 @@ export default function Verification() {
         payload.documentImageUrl = docImage;
       }
 
-      const res = await api.post('/verification/submit', payload);
+      const res = await api.post('/verification/submit.php', payload);
       await refresh();
       setSuccess(res.data.message || 'Verification submitted successfully!');
       // Stay on verification page to show success message instead of redirecting

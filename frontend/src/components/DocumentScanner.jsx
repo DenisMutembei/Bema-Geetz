@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import api from '../services/api';
+import Tesseract from 'tesseract.js';
 
 // Custom hook for camera management
 const useCamera = () => {
@@ -91,22 +92,120 @@ export default function DocumentScanner({
   const frontCamera = useCamera();
   const backCamera = useCamera();
 
+  // OCR extraction using Tesseract.js
+  const performOCR = useCallback(async (imageUrl) => {
+    try {
+      const result = await Tesseract.recognize(imageUrl, 'eng', {
+        logger: (m) => console.log(m)
+      });
+      
+      const text = result.data.text;
+      const confidence = result.data.confidence / 100;
+      
+      // Extract document data based on type
+      const extractedData = extractDocumentData(text, documentType);
+      
+      return {
+        text: text,
+        confidence: confidence,
+        extractedData: extractedData,
+        qualityScore: calculateQualityScore(result.data)
+      };
+    } catch (error) {
+      console.error('OCR failed:', error);
+      return {
+        text: '',
+        confidence: 0,
+        extractedData: null,
+        qualityScore: 0.5
+      };
+    }
+  }, [documentType]);
+
+  // Extract structured data from OCR text
+  const extractDocumentData = (text, type) => {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    
+    if (type === 'driving_license') {
+      // Kenyan DL patterns
+      const dlNumberMatch = text.match(/[A-Z]{2}\d{8,10}/i);
+      const nameMatch = text.match(/(?:NAME|Name)[:\s]+([A-Z\s]+)/i);
+      const dateMatch = text.match(/(\d{2}[\/\.]\d{2}[\/\.]\d{4})/g);
+      
+      return {
+        documentType: 'driving_license',
+        licenseNumber: dlNumberMatch ? dlNumberMatch[0] : null,
+        fullName: nameMatch ? nameMatch[1].trim() : null,
+        dates: dateMatch || [],
+        rawText: text
+      };
+    } else {
+      // Kenyan National ID patterns
+      const idMatch = text.match(/\b\d{8}\b/);
+      const nameMatch = text.match(/(?:NAME|Name)[:\s]+([A-Z\s]+)/i);
+      
+      return {
+        documentType: 'national_id',
+        idNumber: idMatch ? idMatch[0] : null,
+        fullName: nameMatch ? nameMatch[1].trim() : null,
+        rawText: text
+      };
+    }
+  };
+
+  // Calculate image quality score
+  const calculateQualityScore = (data) => {
+    // Base score on confidence and text density
+    const confidenceWeight = 0.6;
+    const textDensityWeight = 0.4;
+    
+    const confidence = data.confidence / 100;
+    const textLength = data.text ? data.text.length : 0;
+    const textDensity = Math.min(textLength / 500, 1); // Normalize to max 500 chars
+    
+    return (confidence * confidenceWeight) + (textDensity * textDensityWeight);
+  };
+
   const scanDocument = useCallback(async (file, side) => {
     if (!file) return null;
+    
+    // Step 1: Upload image
     const formData = new FormData();
     formData.append('document', file);
     formData.append('documentType', documentType);
 
+    let uploadResponse;
     try {
-      const response = await api.post('/document-scan/scan', formData, {
+      const response = await api.post('/document-scan/scan.php', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      return response.data;
+      uploadResponse = response.data;
     } catch (error) {
-      console.error('Scan failed:', error);
+      console.error('Upload failed:', error);
       throw error;
     }
-  }, [documentType]);
+
+    // Step 2: Perform OCR
+    if (uploadResponse.imageUrl) {
+      const ocrResult = await performOCR(uploadResponse.imageUrl);
+      
+      return {
+        success: true,
+        imageUrl: uploadResponse.imageUrl,
+        urls: uploadResponse.urls,
+        scanResult: {
+          confidence: ocrResult.confidence,
+          qualityAnalysis: {
+            qualityScore: ocrResult.qualityScore
+          }
+        },
+        extractedData: ocrResult.extractedData,
+        rawText: ocrResult.text
+      };
+    }
+    
+    return uploadResponse;
+  }, [documentType, performOCR]);
 
   const handleFileUpload = useCallback((side) => {
     const input = document.createElement('input');
@@ -381,6 +480,37 @@ export default function DocumentScanner({
                   </div>
                 </div>
               )}
+              {frontScan.extractedData && (
+                <div className="mt-3 p-3 bg-dark rounded-lg border border-dark-border">
+                  <h5 className="text-gold text-xs font-semibold mb-2 uppercase tracking-wide">Extracted Data</h5>
+                  <div className="space-y-1 text-sm">
+                    {frontScan.extractedData.licenseNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">License #:</span>
+                        <span className="text-white font-mono">{frontScan.extractedData.licenseNumber}</span>
+                      </div>
+                    )}
+                    {frontScan.extractedData.idNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">ID #:</span>
+                        <span className="text-white font-mono">{frontScan.extractedData.idNumber}</span>
+                      </div>
+                    )}
+                    {frontScan.extractedData.fullName && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Name:</span>
+                        <span className="text-white">{frontScan.extractedData.fullName}</span>
+                      </div>
+                    )}
+                    {frontScan.extractedData.dates && frontScan.extractedData.dates.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Dates:</span>
+                        <span className="text-white text-xs">{frontScan.extractedData.dates.join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -492,6 +622,37 @@ export default function DocumentScanner({
                     <span className={`text-sm font-semibold ${getQualityColor(backScan.scanResult.confidence)}`}>
                       {Math.round((backScan.scanResult.confidence || 0) * 100)}%
                     </span>
+                  </div>
+                </div>
+              )}
+              {backScan.extractedData && (
+                <div className="mt-3 p-3 bg-dark rounded-lg border border-dark-border">
+                  <h5 className="text-gold text-xs font-semibold mb-2 uppercase tracking-wide">Extracted Data</h5>
+                  <div className="space-y-1 text-sm">
+                    {backScan.extractedData.licenseNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">License #:</span>
+                        <span className="text-white font-mono">{backScan.extractedData.licenseNumber}</span>
+                      </div>
+                    )}
+                    {backScan.extractedData.idNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">ID #:</span>
+                        <span className="text-white font-mono">{backScan.extractedData.idNumber}</span>
+                      </div>
+                    )}
+                    {backScan.extractedData.fullName && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Name:</span>
+                        <span className="text-white">{backScan.extractedData.fullName}</span>
+                      </div>
+                    )}
+                    {backScan.extractedData.dates && backScan.extractedData.dates.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Dates:</span>
+                        <span className="text-white text-xs">{backScan.extractedData.dates.join(', ')}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

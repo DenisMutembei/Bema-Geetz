@@ -9,15 +9,15 @@ export default function HostDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/listings/host/mine')
-      .then(r => setListings(r.data))
+    api.get('/listings/host.php')
+      .then(r => setListings(r.data.data || r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const deleteListing = async (id) => {
     if (!confirm('Delete this listing?')) return;
-    await api.delete(`/listings/${id}`);
+    await api.delete(`/listings/index.php?id=${id}`);
     setListings(l => l.filter(x => x.id !== id));
   };
 

@@ -31,10 +31,10 @@ export default function ListingDetail() {
 
   useEffect(() => {
     console.log('Fetching listing with ID:', id);
-    api.get(`/listings/${id}`)
+    api.get(`/listings/index.php?id=${id}`)
       .then((r) => {
         console.log('Listing data received:', r.data);
-        setListing(r.data);
+        setListing(r.data.data || r.data);
         setError(null);
       })
       .catch((err) => {

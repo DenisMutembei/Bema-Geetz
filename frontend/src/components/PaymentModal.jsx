@@ -16,7 +16,7 @@ export default function PaymentModal({ booking, onClose, onSuccess }) {
 
     const interval = setInterval(async () => {
       try {
-        const response = await api.get(`/payments?tx_ref=${txRef}`);
+        const response = await api.get(`/payments/index.php?tx_ref=${txRef}`);
         
         if (response.data.payment_status === 'completed') {
           setPaymentComplete(true);
@@ -43,7 +43,7 @@ export default function PaymentModal({ booking, onClose, onSuccess }) {
     setStatus('Initializing secure payment...');
 
     try {
-      const response = await api.post('/payments', {
+      const response = await api.post('/payments/index.php', {
         booking_id: booking.id,
         amount: amount
       });

@@ -13,7 +13,7 @@ export const useApiQuery = (queryKey, queryFn, options = {}) => {
         toast.error('Session expired. Please login again.');
         // Redirect to login or trigger logout
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        window.location.href = '/bemageetz/login';
       } else if (error.response?.status >= 500) {
         toast.error('Server error. Please try again later.');
       } else {
@@ -46,7 +46,7 @@ export const useApiMutation = (mutationFn, options = {}) => {
       if (error.response?.status === 401) {
         toast.error('Session expired. Please login again.');
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        window.location.href = '/bemageetz/login';
       } else if (error.response?.status >= 500) {
         toast.error('Server error. Please try again later.');
       } else {
@@ -176,7 +176,7 @@ export const useAuth = () => {
       onSuccess: (data) => {
         localStorage.setItem('token', data.token);
         queryClient.setQueryData(['currentUser'], data.user);
-        window.location.href = '/';
+        window.location.href = '/bemageetz/';
       },
       invalidateQueries: [['currentUser']],
     }
@@ -188,7 +188,7 @@ export const useAuth = () => {
       onSuccess: (data) => {
         localStorage.setItem('token', data.token);
         queryClient.setQueryData(['currentUser'], data.user);
-        window.location.href = '/';
+        window.location.href = '/bemageetz/';
       },
       invalidateQueries: [['currentUser']],
     }
@@ -197,7 +197,7 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem('token');
     queryClient.clear();
-    window.location.href = '/login';
+    window.location.href = '/bemageetz/login';
   };
   
   return {

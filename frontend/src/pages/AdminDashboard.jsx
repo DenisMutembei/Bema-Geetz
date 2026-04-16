@@ -25,12 +25,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/admin/stats'),
-      api.get('/admin/listings'),
-      api.get('/admin/bookings'),
-      api.get('/admin/users'),
-      api.get('/airport/services'),
-      api.get('/admin/payments'),
+      api.get('/admin/stats.php'),
+      api.get('/admin/listings.php'),
+      api.get('/admin/bookings.php'),
+      api.get('/admin/users.php'),
+      api.get('/airport/services.php'),
+      api.get('/admin/payments.php')
     ]).then(([s, l, b, u, a, p]) => {
       setStats(s.data);
       setListings(l.data);
@@ -43,18 +43,18 @@ export default function AdminDashboard() {
 
   const deleteListing = async (id) => {
     if (!confirm('Delete?')) return;
-    await api.delete(`/admin/listings/${id}`);
+    await api.delete(`/admin/listings.php?id=${id}`);
     setListings(l => l.filter(x => x.id !== id));
   };
 
   const deleteUser = async (id) => {
     if (!confirm('Delete user?')) return;
-    await api.delete(`/admin/users/${id}`);
+    await api.delete(`/admin/users.php?id=${id}`);
     setUsers(u => u.filter(x => x.id !== id));
   };
 
   const updateBookingStatus = async (id, status) => {
-    await api.patch(`/admin/bookings/${id}`, { status });
+    await api.patch(`/admin/bookings.php?id=${id}`, { status });
     setBookings(bs => bs.map(b => b.id === id ? { ...b, status } : b));
   };
 
@@ -62,13 +62,13 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       if (editingService) {
-        const res = await api.put(`/airport/services/${editingService.id}`, {
+        const res = await api.put(`/airport/services.php?id=${editingService.id}`, {
           ...serviceForm,
           is_active: true
         });
         setAirportServices(services => services.map(s => s.id === editingService.id ? res.data : s));
       } else {
-        const res = await api.post('/airport/services', serviceForm);
+        const res = await api.post('/airport/services.php', serviceForm);
         setAirportServices(services => [...services, res.data]);
       }
       setEditingService(null);
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
   const deleteAirportService = async (id) => {
     if (!confirm('Delete this airport service?')) return;
     try {
-      await api.delete(`/airport/services/${id}`);
+      await api.delete(`/airport/services.php?id=${id}`);
       setAirportServices(services => services.filter(s => s.id !== id));
     } catch (err) {
       alert('Failed to delete: ' + (err.response?.data?.message || err.message));

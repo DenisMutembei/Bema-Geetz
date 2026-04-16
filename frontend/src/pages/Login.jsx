@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/auth/login', form);
+      const res = await api.post('/auth/login.php', form);
       login(res.data.token, res.data.user);
       const next = searchParams.get('next');
       if (next) navigate(next);

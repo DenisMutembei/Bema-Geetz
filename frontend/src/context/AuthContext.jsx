@@ -10,9 +10,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('bg_token');
     const stored = localStorage.getItem('bg_user');
-    if (token && stored) {
-      setUser(JSON.parse(stored));
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    if (token && stored && stored !== 'undefined') {
+      try {
+        setUser(JSON.parse(stored));
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      } catch (e) {
+        localStorage.removeItem('bg_token');
+        localStorage.removeItem('bg_user');
+      }
     }
     setLoading(false);
   }, []);
